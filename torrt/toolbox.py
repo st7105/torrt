@@ -1,14 +1,13 @@
 import logging
 from time import time
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 
 from .base_tracker import GenericPrivateTracker
 from .exceptions import TorrtException, TorrtRPCException
 from .utils import (
     RPCClassesRegistry, TrackerClassesRegistry, config, get_url_from_string,
     get_iso_from_timestamp, import_classes, structure_torrent_data, get_torrent_from_url, iter_rpc,
-    NotifierClassesRegistry, iter_notifiers, BotClassesRegistry, iter_bots, configure_entity,
-    TorrentData
+    NotifierClassesRegistry, BotClassesRegistry, configure_entity, TorrentData
 )
 
 try:
@@ -22,8 +21,6 @@ except ImportError:
 if False:  # pragma: nocover
     from .base_rpc import BaseRPC  # noqa
     from .base_tracker import BaseTracker  # noqa
-    from .base_notifier import BaseNotifier  # noqa
-    from .base_bot import BaseBot  # noqa
 
 LOGGER = logging.getLogger(__name__)
 
@@ -86,50 +83,6 @@ def configure_tracker(tracker_alias: str, settings_dict: dict) -> Optional['Base
 
     """
     return configure_entity('Tracker', TrackerClassesRegistry, tracker_alias, settings_dict)
-
-
-def configure_notifier(notifier_alias: str, settings_dict: dict) -> Optional['BaseNotifier']:
-    """Configures notifier using given settings.
-    Saves successful configuration.
-
-    :param notifier_alias: notifier alias
-    :param settings_dict: settings dictionary to configure notifier with
-
-    """
-    return configure_entity('Notifier', NotifierClassesRegistry, notifier_alias, settings_dict)
-
-
-def configure_bot(bot_alias: str, settings_dict: dict) -> Optional['BaseBot']:
-    """Configures bot using given settings.
-    Saves successful configuration.
-
-    :param bot_alias: bot alias
-    :param settings_dict: settings dictionary to configure bot with
-
-    """
-    return configure_entity('Bot', BotClassesRegistry, bot_alias, settings_dict)
-
-
-def remove_notifier(alias: str):
-    """Removes notifier by alias
-
-    :param alias: Notifier alias to remove.
-
-    """
-    LOGGER.info(f'Removing `{alias}` notifier ...')
-
-    config.drop_section('notifiers', alias)
-
-
-def remove_bot(alias: str):
-    """Removes bot by alias
-
-    :param alias: Bot alias to remove.
-
-    """
-    LOGGER.info(f'Removing `{alias}` bot ...')
-
-    config.drop_section('bots', alias)
 
 
 def init_object_registries():
@@ -340,9 +293,6 @@ def walk(forced: bool = False, silent: bool = False, remove_outdated: bool = Tru
 
             new_cfg['torrents'] = cfg['torrents']
 
-            for _, notifier in iter_notifiers():
-                notifier.send(updated)
-
         # Save updated torrents data into config.
         config.update(new_cfg)
 
@@ -425,19 +375,3 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
                     rpc_object.method_remove_torrent(rpc_torrent['hash'])
 
     return updated_by_hashes
-
-
-def run_bots(aliases: List[str] = None):
-    """Run aliased bots one after another.
-
-    :param aliases:
-
-    """
-    aliases = aliases or []
-
-    for alias, bot_object in iter_bots():
-
-        if aliases and alias not in aliases:
-            continue
-
-        bot_object.run()

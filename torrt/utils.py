@@ -20,8 +20,6 @@ from torrentool.exceptions import BencodeDecodingError
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker  # noqa
     from .base_rpc import BaseRPC  # noqa
-    from .base_bot import BaseBot  # noqa
-    from .base_notifier import BaseNotifier  # noqa
 
 
 LOGGER = logging.getLogger('torrt')
@@ -482,37 +480,6 @@ def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
             continue
 
         yield rpc_alias, rpc_object
-
-
-def iter_bots() -> Generator[Tuple[str, 'BaseBot'], None, None]:
-    """Generator to iterate through available bots objects.
-        tuple - bot_alias, bot_object
-
-    """
-    bot_objects = BotObjectsRegistry.get()
-
-    if not bot_objects:
-        LOGGER.error('No Bot objects registered, unable to proceed')
-        return
-
-    for alias, object in bot_objects.items():
-        yield alias, object
-
-
-def iter_notifiers() -> Generator[Tuple[str, 'BaseNotifier'], None, None]:
-    """Generator to iterate through available notifier objects.
-        tuple - notifier_alias, notifier_object
-
-    """
-    notifier_objects = NotifierObjectsRegistry.get()
-
-    if not notifier_objects:
-        LOGGER.debug('No Notifier registered. Notification skipped')
-        return
-
-    for notifier_alias, notifier_object in notifier_objects.items():
-
-        yield notifier_alias, notifier_object
 
 
 class WithSettings:
