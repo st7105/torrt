@@ -109,6 +109,11 @@ class UTorrentRPC(BaseRPC):
             response = self.client.request(
                 url=url, auth=(self.user, self.password), **request_kwargs)
 
+            if self.client.last_response.status_code == 400:
+                self.login()
+                response = self.client.request(
+                    url=url, auth=(self.user, self.password), **request_kwargs)
+
             if self.client.last_response.status_code != 200:
                 raise UTorrentRPCException(response.text.strip())
 
