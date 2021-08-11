@@ -336,6 +336,8 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
             if not page_url:
                 LOGGER.warning(f"    Torrent `{rpc_torrent['name']}` has no link in comment. Skipped")
                 continue
+            else:
+                LOGGER.info(f"    Try to get torrent from `{page_url}`...")
 
             if page_url in download_cache:
                 tracker_torrent = download_cache[page_url]
