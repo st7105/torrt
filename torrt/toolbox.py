@@ -356,6 +356,9 @@ def update_torrents(torrents: Dict[str, dict], remove_outdated: bool = True) -> 
 
             LOGGER.debug('    Update is available')
 
+            if torrents[rpc_torrent['hash']].get('download_to', None) is not None:
+                tracker_torrent = torrents[rpc_torrent['hash']].get('download_to', None)
+
             try:
                 rpc_object.method_add_torrent(
                     tracker_torrent,
