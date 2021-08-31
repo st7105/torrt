@@ -7,7 +7,7 @@ class RutorTracker(GenericPublicTracker):
     """This class implements .torrent files downloads for http://rutor.info tracker."""
 
     alias: str = 'rutor.org'
-    mirrors: List[str] = ['rutor.is', 'rutor.info', 'new-rutor.org']
+    mirrors: List[str] = ['rutor.is', 'rutor.info', 'new-rutor.org', '6tor.org']
 
     def __init__(self, cookies: dict = None):
 
