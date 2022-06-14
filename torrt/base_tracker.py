@@ -6,6 +6,8 @@ from locale import getlocale, setlocale, LC_ALL
 from typing import List, Optional, Union
 from urllib.parse import urlparse, urljoin, parse_qs
 
+from furl import furl
+
 from .exceptions import TorrtTrackerException
 from .utils import (
     parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, TorrentData,
@@ -37,7 +39,6 @@ class BaseTracker(WithSettings):
     """
 
     def __init__(self, cookies: dict = None, query_string: str = None):
-        self.mirror_picked: Optional[str] = None
 
         if cookies is None:
             cookies = {}
@@ -71,50 +72,6 @@ class BaseTracker(WithSettings):
         """
         return encode_value(value, self.encoding)
 
-    def pick_mirror(self, url: str) -> str:
-        """Probes mirrors (domains) one by one and chooses one whick is available to use.
-
-        :param url:
-
-        """
-        mirror_picked = self.mirror_picked
-
-        if mirror_picked is None:
-            self.log_debug('Picking a mirror ...')
-
-            original_domain = self.extract_domain(url)
-            mirror_picked = original_domain
-
-            for mirror_domain in self.mirrors:
-                mirror_url = f'{self.extract_scheme(url)}://{mirror_domain}'
-
-                self.log_debug(f'Probing mirror: `{mirror_url}` ...')
-
-                response = self.client.request(
-                    mirror_url,
-                    timeout=4,
-                    silence_exceptions=True,
-                )
-
-                if response and response.ok and response.url.startswith(mirror_url):
-                    mirror_picked = mirror_domain
-                    break
-
-            self.mirror_picked = mirror_picked
-
-        return mirror_picked
-
-    def get_mirrored_url(self, url: str) -> str:
-        """Returns a mirrored URL for a given one.
-
-        :param url:
-
-        """
-        mirror_picked = self.mirror_picked
-        original_domain = self.extract_domain(url)
-        url_mirror = url.replace(original_domain, mirror_picked)
-        return url_mirror
-
     def register(self):
         """Adds this object into TrackerObjectsRegistry."""
 
@@ -139,7 +96,7 @@ class BaseTracker(WithSettings):
         :param url:
 
         """
-        return urlparse(url).scheme
+        return furl(url).scheme
 
     @classmethod
     def extract_domain(cls, url: str) -> str:
@@ -148,7 +105,16 @@ class BaseTracker(WithSettings):
         :param url:
 
         """
-        return urlparse(url).netloc
+        return furl(url).netloc
+
+    @classmethod
+    def replace_domain(cls, url: str, domain: str) -> str:
+
+        url = furl(url)
+
+        url.netloc = domain
+
+        return str(url)
 
     def get_response(
             self,
@@ -182,17 +148,10 @@ class BaseTracker(WithSettings):
 
         """
         if query_string:
-
             delim = '?'
-
             if '?' in url:
                 delim = '&'
-
             url = f'{url}{delim}{query_string}'
-
-        self.pick_mirror(url)
-
-        url = self.get_mirrored_url(url)
 
         result = self.client.request(
             url=url,
@@ -202,7 +161,7 @@ class BaseTracker(WithSettings):
             cookies=cookies,
         )
 
-        if result is not None and as_soup:
+        if result and as_soup:
             result = self.make_page_soup(result.text)
 
         return result
@@ -340,6 +299,12 @@ class BaseTracker(WithSettings):
 class GenericTracker(BaseTracker):
     """Generic torrent tracker handler class implementing most common tracker handling methods."""
 
+    def get_mirrors(self, url: str) -> List[str]:
+        original_domain = self.extract_domain(url)
+        mirrors = [self.alias] + self.mirrors
+        mirrors.remove(original_domain)
+        return [original_domain] + mirrors
+
     def get_id_from_link(self, url: str) -> str:
         """Returns forum thread identifier from full thread URL.
 
@@ -355,34 +320,40 @@ class GenericTracker(BaseTracker):
         :param url: URL to find and get torrent from
 
         """
-        download_link = self.get_download_link(url)
+        mirrors = self.get_mirrors(url)
 
-        if not download_link:
-            self.log_error(f'Cannot find torrent file download link at {url}')
-            return None
+        for mirror_domain in mirrors:
 
-        page_data = self.extract_page_data()
+            mirror_url = self.replace_domain(url, mirror_domain)
 
-        self.log_debug(f'Torrent download link found: {download_link}')
+            download_link = self.get_download_link(mirror_url)
 
-        torrent_contents = self.download_torrent(download_link, referer=url)
+            if not download_link:
+                self.log_error(f'Cannot find torrent file download link at {mirror_url}')
+                continue
 
-        if torrent_contents is None:
-            self.log_debug(f'Torrent download from `{download_link}` has failed')
-            return None
+            page_data = self.extract_page_data()
 
-        parsed = parse_torrent(torrent_contents)
+            self.log_debug(f'Torrent download link found: {download_link}')
 
-        if not parsed:
-            return None
+            torrent_contents = self.download_torrent(download_link, referer=mirror_url)
 
-        return TorrentData(
-            url=url,
-            url_file=download_link,
-            parsed=parsed,
-            raw=torrent_contents,
-            page=page_data,
-        )
+            if torrent_contents is None:
+                self.log_debug(f'Torrent download from `{download_link}` has failed')
+                continue
+
+            parsed = parse_torrent(torrent_contents)
+
+            if not parsed:
+                continue
+
+            return TorrentData(
+                url=url,
+                url_file=download_link,
+                parsed=parsed,
+                raw=torrent_contents,
+                page=page_data,
+            )
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.
