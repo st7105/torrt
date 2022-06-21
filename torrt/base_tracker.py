@@ -323,37 +323,39 @@ class GenericTracker(BaseTracker):
         mirrors = self.get_mirrors(url)
 
         for mirror_domain in mirrors:
-
             mirror_url = self.replace_domain(url, mirror_domain)
 
-            download_link = self.get_download_link(mirror_url)
+            try:
+                download_link = self.get_download_link(mirror_url)
 
-            if not download_link:
-                self.log_error(f'Cannot find torrent file download link at {mirror_url}')
-                continue
+                if not download_link:
+                    self.log_error(f'Cannot find torrent file download link at {mirror_url}')
+                    continue
 
-            page_data = self.extract_page_data()
+                page_data = self.extract_page_data()
 
-            self.log_debug(f'Torrent download link found: {download_link}')
+                self.log_debug(f'Torrent download link found: {download_link}')
 
-            torrent_contents = self.download_torrent(download_link, referer=mirror_url)
+                torrent_contents = self.download_torrent(download_link, referer=mirror_url)
 
-            if torrent_contents is None:
-                self.log_debug(f'Torrent download from `{download_link}` has failed')
-                continue
+                if torrent_contents is None:
+                    self.log_debug(f'Torrent download from `{download_link}` has failed')
+                    continue
 
-            parsed = parse_torrent(torrent_contents)
+                parsed = parse_torrent(torrent_contents)
 
-            if not parsed:
-                continue
+                if not parsed:
+                    continue
 
-            return TorrentData(
-                url=url,
-                url_file=download_link,
-                parsed=parsed,
-                raw=torrent_contents,
-                page=page_data,
-            )
+                return TorrentData(
+                    url=url,
+                    url_file=download_link,
+                    parsed=parsed,
+                    raw=torrent_contents,
+                    page=page_data,
+                )
+            except BaseException as e:
+                self.log_error(f'Cannot find torrent file download link at {mirror_url}: {e}')
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.
