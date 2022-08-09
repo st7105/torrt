@@ -28,7 +28,7 @@ if False:  # pragma: nocover
     from .base_rpc import BaseRPC  # noqa
 
 
-__log__ = logging.get__log__(__name__)
+__log__ = logging.getLogger(__name__)
 
 _THREAD_LOCAL = threading.local()
 
