@@ -48,9 +48,6 @@ setup(
     ],
     setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
-    extras_require={
-        'telegram': ['python-telegram-bot >=11.1.0, <12.0.0a0']
-    },
     test_suite='tests',
     tests_require=[
         'pytest',
@@ -58,17 +55,12 @@ setup(
         'pytest-responsemock>=1.0.0',
     ],
 
-    entry_points={
-        'console_scripts': ['torrt = torrt.main:process_commands'],
-    },
-
     classifiers=[
         # As in https://pypi.python.org/pypi?:action=list_classifiers
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

@@ -28,7 +28,7 @@ if False:  # pragma: nocover
     from .base_rpc import BaseRPC  # noqa
 
 
-LOGGER = logging.getLogger('torrt')
+__log__ = logging.get__log__(__name__)
 
 _THREAD_LOCAL = threading.local()
 
@@ -93,7 +93,7 @@ class HttpClient:
         :param kwargs:
 
         """
-        LOGGER.debug(f'Fetching {url} ...')
+        __log__.debug(f'Fetching {url} ...')
 
         headers = {**(headers or {})}
 
@@ -136,7 +136,7 @@ class HttpClient:
         except RequestException as e:
 
             self.last_error = f'{e}'
-            LOGGER.warning(f"Failed to get response from `{url}`: {e}")
+            __log__.warning(f"Failed to get response from `{url}`: {e}")
 
             if silence_exceptions is None:
                 silence_exceptions = self.silence_exceptions
@@ -245,7 +245,7 @@ def configure_entity(
         Should accept entity object as argument.
 
     """
-    LOGGER.info(f'Configuring `{alias}` {type_name.lower()} ...')
+    __log__.info(f'Configuring `{alias}` {type_name.lower()} ...')
 
     entity_cls = registry.get(alias)
 
@@ -257,22 +257,22 @@ def configure_entity(
         if configured:
             before_save and before_save(obj)
             obj.save_settings()
-            LOGGER.info(f'{type_name} `{alias}` is configured')
+            __log__.info(f'{type_name} `{alias}` is configured')
 
             return obj
 
         else:
-            LOGGER.error(f'{type_name} `{alias}` configuration failed. Check your settings')
+            __log__.error(f'{type_name} `{alias}` configuration failed. Check your settings')
 
     else:
-        LOGGER.error(f'{type_name} `{alias}` is unknown')
+        __log__.error(f'{type_name} `{alias}` is unknown')
 
 
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from their directories."""
 
-    for package_name in ('rpc', 'trackers', 'notifiers', 'bots'):
-        LOGGER.debug(f'Importing {package_name} ...')
+    for package_name in ('rpc', 'trackers'):
+        __log__.debug(f'Importing {package_name} ...')
         import_from_path(package_name)
 
 
@@ -297,7 +297,7 @@ def parse_torrent(torrent: bytes) -> Optional[Torrent]:
         return Torrent.from_string(torrent)
 
     except BencodeDecodingError as e:
-        LOGGER.error(f'Unable to parse torrent: {e}')
+        __log__.error(f'Unable to parse torrent: {e}')
         return None
 
 
@@ -448,7 +448,7 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
     :param url:
 
     """
-    LOGGER.debug(f'Downloading torrent file from `{url}` ...')
+    __log__.debug(f'Downloading torrent file from `{url}` ...')
 
     tracker: 'GenericTracker' = TrackerObjectsRegistry.get_for_string(url)
 
@@ -456,14 +456,14 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
         torrent_info = tracker.get_torrent(url)
 
         if torrent_info is None:
-            LOGGER.warning(f'Unable to get torrent from `{url}`')
+            __log__.warning(f'Unable to get torrent from `{url}`')
 
         else:
-            LOGGER.debug(f'Torrent was downloaded from `{url}`')
+            __log__.debug(f'Torrent was downloaded from `{url}`')
             return torrent_info
 
     else:
-        LOGGER.warning(f'Tracker handler for `{url}` is not registered')
+        __log__.warning(f'Tracker handler for `{url}` is not registered')
 
     return None
 
@@ -476,13 +476,13 @@ def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
     rpc_objects = RPCObjectsRegistry.get()
 
     if not rpc_objects:
-        LOGGER.error('No RPC objects registered, unable to proceed')
+        __log__.error('No RPC objects registered, unable to proceed')
         return
 
     for rpc_alias, rpc_object in rpc_objects.items():
 
         if not rpc_object.enabled:
-            LOGGER.debug(f'RPC `{rpc_object.alias}` is disabled, skipped.')
+            __log__.debug(f'RPC `{rpc_object.alias}` is disabled, skipped.')
             continue
 
         yield rpc_alias, rpc_object
@@ -514,7 +514,7 @@ class WithSettings:
         :param settings:
 
         """
-        LOGGER.debug(f'Spawning `{cls.__name__}` object with the given settings ...')
+        __log__.debug(f'Spawning `{cls.__name__}` object with the given settings ...')
 
         return cls(**settings)
 
@@ -525,7 +525,7 @@ class WithSettings:
         :param msg:
 
         """
-        LOGGER.debug(f'{cls.__name__}: {msg}')
+        __log__.debug(f'{cls.__name__}: {msg}')
 
     @classmethod
     def log_info(cls, msg: str):
@@ -534,7 +534,7 @@ class WithSettings:
         :param msg:
 
         """
-        LOGGER.info(f'{cls.__name__}: {msg}')
+        __log__.info(f'{cls.__name__}: {msg}')
 
     @classmethod
     def log_warning(cls, msg: str):
@@ -543,7 +543,7 @@ class WithSettings:
         :param msg:
 
         """
-        LOGGER.warning(f'{cls.__name__}: {msg}')
+        __log__.warning(f'{cls.__name__}: {msg}')
 
     @classmethod
     def log_error(cls, msg: str):
@@ -552,7 +552,7 @@ class WithSettings:
         :param msg:
 
         """
-        LOGGER.error(f'{cls.__name__}: {msg}')
+        __log__.error(f'{cls.__name__}: {msg}')
 
     def save_settings(self):
         """Saves object settings into torrt configuration file."""
@@ -580,13 +580,8 @@ class TorrtConfig:
     USER_SETTINGS_FILE = USER_DATA_PATH / 'config.json'
 
     _basic_settings = {
-        'time_last_check': 0,
-        'walk_interval_hours': 1,
         'rpc': {},
-        'trackers': {},
-        'torrents': {},
-        'notifiers': {},
-        'bots': {}
+        'trackers': {}
     }
 
     @classmethod
@@ -631,7 +626,7 @@ class TorrtConfig:
     def load(cls) -> dict:
         """Returns current settings dictionary."""
 
-        LOGGER.debug(f'Loading configuration file {cls.USER_SETTINGS_FILE} ...')
+        __log__.debug(f'Loading configuration file {cls.USER_SETTINGS_FILE} ...')
 
         cls.bootstrap()
 
@@ -653,7 +648,7 @@ class TorrtConfig:
         :param settings_dict:
 
         """
-        LOGGER.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
+        __log__.debug(f'Saving configuration file {cls.USER_SETTINGS_FILE} ...')
 
         with open(str(cls.USER_SETTINGS_FILE), 'w') as f:
             json.dump(settings_dict, f, indent=4)
@@ -679,7 +674,7 @@ class ObjectsRegistry:
         """
         name = getattr(obj, 'alias')
 
-        LOGGER.debug(f'Registering `{name}` from {obj} ...')
+        __log__.debug(f'Registering `{name}` from {obj} ...')
 
         self._items[name] = obj
 
@@ -717,7 +712,3 @@ RPCClassesRegistry = ObjectsRegistry()
 RPCObjectsRegistry = ObjectsRegistry()
 TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()
-NotifierClassesRegistry = ObjectsRegistry()
-NotifierObjectsRegistry = ObjectsRegistry()
-BotClassesRegistry = ObjectsRegistry()
-BotObjectsRegistry = ObjectsRegistry()
