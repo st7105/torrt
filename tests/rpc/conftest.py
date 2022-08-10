@@ -1,7 +1,6 @@
 import pytest
 
-from torrt.toolbox import TorrentData
-from torrt.utils import Torrent
+from torrt.utils import Torrent, TorrentData
 
 
 @pytest.fixture
