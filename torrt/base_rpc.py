@@ -1,6 +1,9 @@
+import logging
 from typing import Dict, List, Any
 
 from .utils import WithSettings, RPCObjectsRegistry, TorrentData, RPCClassesRegistry, HttpClient
+
+__log__ = logging.getLogger(__name__)
 
 
 class BaseRPC(WithSettings):

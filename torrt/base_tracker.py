@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime
 from http.cookiejar import CookieJar
@@ -13,6 +14,8 @@ from .utils import (
     parse_torrent, make_soup, encode_value, WithSettings, TrackerObjectsRegistry, TorrentData,
     PageData, TrackerClassesRegistry, HttpClient, Response, BeautifulSoup
 )
+
+__log__ = logging.getLogger(__name__)
 
 
 class BaseTracker(WithSettings):
@@ -329,17 +332,17 @@ class GenericTracker(BaseTracker):
                 download_link = self.get_download_link(mirror_url)
 
                 if not download_link:
-                    self.log_error(f'Cannot find torrent file download link at {mirror_url}')
+                    __log__.error(f'Cannot find torrent file download link at {mirror_url}')
                     continue
 
                 page_data = self.extract_page_data()
 
-                self.log_debug(f'Torrent download link found: {download_link}')
+                __log__.debug(f'Torrent download link found: {download_link}')
 
                 torrent_contents = self.download_torrent(download_link, referer=mirror_url)
 
                 if torrent_contents is None:
-                    self.log_debug(f'Torrent download from `{download_link}` has failed')
+                    __log__.debug(f'Torrent download from `{download_link}` has failed')
                     continue
 
                 parsed = parse_torrent(torrent_contents)
@@ -355,7 +358,9 @@ class GenericTracker(BaseTracker):
                     page=page_data,
                 )
             except BaseException as e:
-                self.log_error(f'Cannot find torrent file download link at {mirror_url}: {e}')
+                __log__.warning(f'Cannot find torrent file download link at mirror {mirror_url}: {e}')
+
+        __log__.error(f'Cannot find torrent file download link at {url}')
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.
@@ -384,7 +389,7 @@ class GenericPublicTracker(GenericTracker):
         return url.split('/')[-1]
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
-        self.log_debug(f'Downloading torrent file from {url} ...')
+        __log__.debug(f'Downloading torrent file from {url} ...')
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
         return getattr(response, 'content', None)
@@ -450,7 +455,7 @@ class GenericPrivateTracker(GenericPublicTracker):
 
         login_url = self.login_url % {'domain': domain}
 
-        self.log_debug(f'Trying to login at {login_url} ...')
+        __log__.debug(f'Trying to login at {login_url} ...')
 
         if self.logged_in:
             raise TorrtTrackerException(f'Consecutive login attempt detected at `{self.__class__.__name__}`')
@@ -495,10 +500,10 @@ class GenericPrivateTracker(GenericPublicTracker):
 
             # Save auth info to config.
             self.save_settings()
-            self.log_debug('Login is successful')
+            __log__.debug('Login is successful')
 
         else:
-            self.log_warning('Login with given credentials failed')
+            __log__.warning('Login with given credentials failed')
 
         return self.logged_in
 
@@ -525,7 +530,7 @@ class GenericPrivateTracker(GenericPublicTracker):
         return query_string
 
     def download_torrent(self, url: str, referer: str = None) -> Optional[bytes]:
-        self.log_debug(f'Downloading torrent file from {url} ...')
+        __log__.debug(f'Downloading torrent file from {url} ...')
 
         self.before_download(url)
 

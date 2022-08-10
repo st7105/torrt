@@ -1,7 +1,9 @@
-from datetime import datetime
-from typing import List, Optional
+import logging
+from typing import List
 
 from ..base_tracker import GenericPrivateTracker
+
+__log__ = logging.getLogger(__name__)
 
 
 class EniaHDTracker(GenericPrivateTracker):
@@ -38,7 +40,7 @@ class EniaHDTracker(GenericPrivateTracker):
 
         if download_link is None:
 
-            self.log_debug('Login is required to download torrent file')
+            __log__.debug('Login is required to download torrent file')
             domain = self.extract_domain(url)
 
             if self.login(domain):

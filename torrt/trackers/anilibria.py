@@ -1,8 +1,12 @@
+import logging
 import re
 from collections import defaultdict
 from typing import List, Dict, Optional, Tuple
 
 from ..base_tracker import GenericPublicTracker
+
+__log__ = logging.getLogger(__name__)
+
 
 REGEX_QUALITY = re.compile(r".+\[(.+)\]")
 # This regex is used to remove every non-word character or underscore from quality string.
@@ -36,7 +40,7 @@ class AnilibriaTracker(GenericPublicTracker):
 
         available_qualities = self.find_available_qualities(url)
 
-        self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
+        __log__.debug(f"Available in qualities: {', '.join(available_qualities)}")
 
         if available_qualities:
 
@@ -51,19 +55,19 @@ class AnilibriaTracker(GenericPublicTracker):
             preferred_qualities = [quality for quality in quality_prefs if quality in available_qualities]
 
             if not preferred_qualities:
-                self.log_info(
+                __log__.info(
                     'Torrent is not available in preferred qualities: '
                     f"{', '.join(quality_prefs)}")
 
                 quality, link = next(iter(available_qualities.items()))
 
-                self.log_info(f'Fallback to `{quality}` quality ...')
+                __log__.info(f'Fallback to `{quality}` quality ...')
 
                 return link
 
             else:
                 target_quality = preferred_qualities[0]
-                self.log_debug(f'Trying to get torrent in `{target_quality}` quality ...')
+                __log__.debug(f'Trying to get torrent in `{target_quality}` quality ...')
 
                 return available_qualities[target_quality]
 
@@ -81,7 +85,7 @@ class AnilibriaTracker(GenericPublicTracker):
         json = self.api_get_release_by_code(code)
 
         if not json.get('status', False):
-            self.log_error(f'Failed to get release `{code}` from API')
+            __log__.error(f'Failed to get release `{code}` from API')
             return {}
 
         available_qualities = {}

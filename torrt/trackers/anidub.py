@@ -1,6 +1,9 @@
+import logging
 from typing import List
 
 from ..base_tracker import GenericPrivateTracker
+
+__log__ = logging.getLogger(__name__)
 
 
 class AniDUBTracker(GenericPrivateTracker):
@@ -40,7 +43,7 @@ class AniDUBTracker(GenericPrivateTracker):
 
         if page_soup.select('form input[name="login"]'):
 
-            self.log_debug('Login is required to download torrent file.')
+            __log__.debug('Login is required to download torrent file.')
             domain = self.extract_domain(url)
 
             if self.login(domain):
@@ -55,7 +58,7 @@ class AniDUBTracker(GenericPrivateTracker):
             for quality_div in quality_divs:
                 available_qualities.append(quality_div['id'])
 
-            self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
+            __log__.debug(f"Available in qualities: {', '.join(available_qualities)}")
 
             if available_qualities:
 
@@ -66,7 +69,7 @@ class AniDUBTracker(GenericPrivateTracker):
                 ]
 
                 if not preferred_qualities:
-                    self.log_debug(
+                    __log__.debug(
                         "Torrent is not available in preferred qualities: "
                         f"{', '.join(self.quality_prefs)}")
 
@@ -74,7 +77,7 @@ class AniDUBTracker(GenericPrivateTracker):
 
                     target_quality = preferred_qualities[0]
 
-                    self.log_debug(f'Trying to get torrent in `{target_quality}` quality ...')
+                    __log__.debug(f'Trying to get torrent in `{target_quality}` quality ...')
 
                     target_links = page_soup.select(f'div#{target_quality} div.torrent_h a')
 
@@ -89,6 +92,6 @@ class AniDUBTracker(GenericPrivateTracker):
                         download_link = self.expand_link(url, download_link)
 
                     else:
-                        self.log_debug(f'Unable to find a link for `{target_quality}` quality')
+                        __log__.debug(f'Unable to find a link for `{target_quality}` quality')
 
         return download_link

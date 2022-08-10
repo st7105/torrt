@@ -1,7 +1,10 @@
+import logging
 from datetime import datetime
 from typing import List, Optional
 
 from ..base_tracker import GenericPrivateTracker
+
+__log__ = logging.getLogger(__name__)
 
 
 class NNMClubTracker(GenericPrivateTracker):
@@ -44,7 +47,7 @@ class NNMClubTracker(GenericPrivateTracker):
 
         if download_link is None:
 
-            self.log_debug('Login is required to download torrent file')
+            __log__.debug('Login is required to download torrent file')
             domain = self.extract_domain(url)
 
             if self.login(domain):

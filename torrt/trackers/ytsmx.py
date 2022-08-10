@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict, Tuple, Optional
 
 from bs4 import BeautifulSoup
@@ -6,6 +7,8 @@ from requests.models import Response
 
 from ..exceptions import TorrtTrackerException
 from ..base_tracker import GenericPublicTracker
+
+__log__ = logging.getLogger(__name__)
 
 
 API_BASE = 'https://yts.mx/api/v2/'
@@ -122,10 +125,10 @@ class YtsmxTracker(GenericPublicTracker):
             available_qualities = self._get_quality_links(movie_details)
 
         except YtsmxTrackerException as e:
-            self.log_error(str(e))
+            __log__.error(str(e))
             return ''
 
-        self.log_debug(f"Available in qualities: {', '.join(available_qualities)}")
+        __log__.debug(f"Available in qualities: {', '.join(available_qualities)}")
 
         pref_link = self._get_preffered_link(available_qualities)
         if pref_link:
@@ -133,13 +136,13 @@ class YtsmxTracker(GenericPublicTracker):
             return link
 
         else:
-            self.log_info(
+            __log__.info(
                 'Torrent is not available in preferred qualities: '
                 f"{', '.join(self.quality_prefs)}" or '(empty)'
             )
 
             quality, link = next(iter(available_qualities.items()))
-            self.log_info(f'Fallback to `{quality}` quality ...')
+            __log__.info(f'Fallback to `{quality}` quality ...')
 
             return link
 

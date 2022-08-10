@@ -1,8 +1,11 @@
+import logging
 from typing import Dict, Any, List
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import base64encode, TorrentData
+
+__log__ = logging.getLogger(__name__)
 
 
 class DelugeRPC(BaseRPC):
@@ -41,7 +44,7 @@ class DelugeRPC(BaseRPC):
 
     def method_login(self) -> bool:
 
-        self.log_debug('Logging in ...')
+        __log__.debug('Logging in ...')
 
         data = self.build_request_payload('auth.login', [self.password])
 
@@ -51,7 +54,7 @@ class DelugeRPC(BaseRPC):
             self.logged_in = True
             return self.method_is_connected()
 
-        self.log_error('Login failed')
+        __log__.error('Login failed')
 
         return False
 
@@ -78,7 +81,7 @@ class DelugeRPC(BaseRPC):
         if not self.logged_in:
             self.method_login()
 
-        self.log_debug(f"RPC method `{data['method']}` ...")
+        __log__.debug(f"RPC method `{data['method']}` ...")
 
         response = self.query_(data)
 

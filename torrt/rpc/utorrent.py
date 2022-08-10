@@ -1,9 +1,12 @@
+import logging
 from typing import List, Any
 from urllib.parse import urljoin
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import make_soup, TorrentData
+
+__log__ = logging.getLogger(__name__)
 
 
 class UTorrentRPC(BaseRPC):
@@ -59,7 +62,7 @@ class UTorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            self.log_error(f'Failed to login using `{self.url}` RPC: {e}')
+            __log__.error(f'Failed to login using `{self.url}` RPC: {e}')
             raise UTorrentRPCException(str(e))
 
     def build_params(self, action: str = None, params: dict = None) -> dict:
@@ -93,7 +96,7 @@ class UTorrentRPC(BaseRPC):
     def query(self, data: dict, files: dict = None) -> dict:
 
         action = data['action'] or 'list'
-        self.log_debug(f'RPC action `{action}` ...', )
+        __log__.debug(f'RPC action `{action}` ...', )
 
         if not self.logged_in:
             self.login()
@@ -114,7 +117,7 @@ class UTorrentRPC(BaseRPC):
 
         except Exception as e:
 
-            self.log_error(f'Failed to query RPC `{url}`: {e}')
+            __log__.error(f'Failed to query RPC `{url}`: {e}')
             raise UTorrentRPCException(str(e))
 
         return response

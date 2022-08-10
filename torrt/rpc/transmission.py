@@ -1,8 +1,11 @@
+import logging
 from typing import Dict, Any, Union, List
 
 from ..base_rpc import BaseRPC
 from ..exceptions import TorrtRPCException
 from ..utils import base64encode, TorrentData
+
+__log__ = logging.getLogger(__name__)
 
 
 class TransmissionRPC(BaseRPC):
@@ -72,7 +75,7 @@ class TransmissionRPC(BaseRPC):
 
     def query(self, data: dict) -> dict:
 
-        self.log_debug(f"RPC method `{data['method']}` ...")
+        __log__.debug(f"RPC method `{data['method']}` ...")
 
         json_data = self.query_(data)
 

@@ -518,42 +518,6 @@ class WithSettings:
 
         return cls(**settings)
 
-    @classmethod
-    def log_debug(cls, msg: str):
-        """Sends the message to debug log.
-
-        :param msg:
-
-        """
-        __log__.debug(f'{cls.__name__}: {msg}')
-
-    @classmethod
-    def log_info(cls, msg: str):
-        """Sends the message to info log.
-
-        :param msg:
-
-        """
-        __log__.info(f'{cls.__name__}: {msg}')
-
-    @classmethod
-    def log_warning(cls, msg: str):
-        """Sends the message to warning log.
-
-        :param msg:
-
-        """
-        __log__.warning(f'{cls.__name__}: {msg}')
-
-    @classmethod
-    def log_error(cls, msg: str):
-        """Sends the message to error log.
-
-        :param msg:
-
-        """
-        __log__.error(f'{cls.__name__}: {msg}')
-
     def save_settings(self):
         """Saves object settings into torrt configuration file."""
 
