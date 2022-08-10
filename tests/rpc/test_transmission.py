@@ -71,7 +71,6 @@ def test_add_torrent(response_mock, transmission, torrent_params, torrent_data):
     ):
         response = transmission.method_add_torrent(
             torrent=torrent_data,
-            download_to='/here/',
             params=torrent_params,
         )
         assert response == {}

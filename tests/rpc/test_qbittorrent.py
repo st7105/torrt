@@ -37,7 +37,6 @@ def test_add_torrent(response_mock, qbit, torrent_params, torrent_data):
     ):
         response = qbit.method_add_torrent(
             torrent=torrent_data,
-            download_to='/here/',
             params=torrent_params,
         )
         assert response.ok
