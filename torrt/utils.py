@@ -25,7 +25,6 @@ from torrentool.exceptions import BencodeDecodingError
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker  # noqa
-    from .base_rpc import BaseRPC  # noqa
 
 
 __log__ = logging.getLogger(__name__)
@@ -271,7 +270,7 @@ def configure_entity(
 def import_classes():
     """Dynamically imports RPC classes and tracker handlers from their directories."""
 
-    for package_name in ('rpc', 'trackers'):
+    for package_name in ['trackers']:
         __log__.debug(f'Importing {package_name} ...')
         import_from_path(package_name)
 
@@ -468,26 +467,6 @@ def get_torrent_from_url(url: Optional[str]) -> Optional[TorrentData]:
     return None
 
 
-def iter_rpc() -> Generator[Tuple[str, 'BaseRPC'], None, None]:
-    """Generator to iterate through available and enable RPC objects.
-        tuple - rpc_alias, rpc_object
-
-    """
-    rpc_objects = RPCObjectsRegistry.get()
-
-    if not rpc_objects:
-        __log__.error('No RPC objects registered, unable to proceed')
-        return
-
-    for rpc_alias, rpc_object in rpc_objects.items():
-
-        if not rpc_object.enabled:
-            __log__.debug(f'RPC `{rpc_object.alias}` is disabled, skipped.')
-            continue
-
-        yield rpc_alias, rpc_object
-
-
 class WithSettings:
     """Introduces settings support for class objects.
 
@@ -544,7 +523,6 @@ class TorrtConfig:
     USER_SETTINGS_FILE = USER_DATA_PATH / 'config.json'
 
     _basic_settings = {
-        'rpc': {},
         'trackers': {}
     }
 
@@ -672,7 +650,5 @@ class ObjectsRegistry:
         return None
 
 
-RPCClassesRegistry = ObjectsRegistry()
-RPCObjectsRegistry = ObjectsRegistry()
 TrackerClassesRegistry = ObjectsRegistry()
 TrackerObjectsRegistry = ObjectsRegistry()

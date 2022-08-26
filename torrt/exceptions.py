@@ -12,11 +12,3 @@ class TorrtTrackerException(TorrtException):
     All other tracker related exception should inherit from that.
 
     """
-
-
-class TorrtRPCException(TorrtException):
-    """Base torrt RPC exception.
-
-    All other RPC related exception should inherit from that.
-
-    """

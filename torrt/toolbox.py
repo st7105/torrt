@@ -1,12 +1,9 @@
 import logging
 
 from .base_tracker import GenericPrivateTracker
-from .utils import (
-    RPCClassesRegistry, TrackerClassesRegistry, config, import_classes
-)
+from .utils import TrackerClassesRegistry, config, import_classes
 
 if False:  # pragma: nocover
-    from .base_rpc import BaseRPC  # noqa
     from .base_tracker import BaseTracker  # noqa
 
 __log__ = logging.getLogger(__name__)
@@ -18,16 +15,6 @@ def init_object_registries():
     __log__.debug('Initializing objects registries from configuration file ...')
 
     cfg = config.load()
-
-    settings_to_registry_map = {
-        'rpc': RPCClassesRegistry
-    }
-
-    for settings_entry, registry_cls in settings_to_registry_map.items():
-
-        for alias, settings in cfg[settings_entry].items():
-            registry_obj = registry_cls.get(alias)
-            registry_obj and registry_obj.spawn_with_settings(settings).register()
 
     # Special case for trackers to initialize public trackers automatically.
     for alias, tracker_cls in TrackerClassesRegistry.get().items():

@@ -7,7 +7,7 @@ class KinozalTracker(GenericPrivateTracker):
     """This class implements .torrent files downloads for http://kinozal.tv/ tracker."""
 
     alias: str = 'kinozal.tv'
-    login_url: str = 'https://%(domain)s/takelogin.php'
+    login_url: str = 'http://%(domain)s/takelogin.php'
     auth_cookie_name: str = 'uid'
     mirrors: List[str] = ['kinozal-tv.appspot.com', 'kinozal.me']
     encoding: str = 'cp1251'
@@ -24,6 +24,15 @@ class KinozalTracker(GenericPrivateTracker):
         """Tries to find .torrent file download link at forum thread page and return that one."""
 
         page_soup = self.get_torrent_page(url)
+
+        is_anonymous = self.find_links(url, page_soup, 'signup') is not None
+
+        if is_anonymous:
+            domain = self.extract_domain(url)
+
+            self.login(domain)
+
+            page_soup = self.get_torrent_page(url, drop_cache=True)
 
         expected_link = rf'/download.+\={self.get_id_from_link(url)}'
         download_link = self.find_links(url, page_soup, definite=expected_link)
