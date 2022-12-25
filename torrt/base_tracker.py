@@ -305,7 +305,8 @@ class GenericTracker(BaseTracker):
     def get_mirrors(self, url: str) -> List[str]:
         original_domain = self.extract_domain(url)
         mirrors = [self.alias] + self.mirrors
-        mirrors.remove(original_domain)
+        if original_domain in mirrors:
+            mirrors.remove(original_domain)
         return [original_domain] + mirrors
 
     def get_id_from_link(self, url: str) -> str:
