@@ -1,4 +1,8 @@
-from typing import List
+import re
+from typing import List, Optional
+
+import torf
+from furl import furl
 
 from ..base_tracker import GenericPrivateTracker
 
@@ -38,3 +42,25 @@ class KinozalTracker(GenericPrivateTracker):
         download_link = self.find_links(url, page_soup, definite=expected_link)
 
         return download_link or ''
+
+    @classmethod
+    def get_torrent_id(cls, url: str):
+        f_url = furl(url)
+
+        return f_url.args.get('id')
+
+    def get_torrent_magnet(self, url: str) -> Optional[torf.Magnet]:
+        torrent_id = self.get_torrent_id(url)
+
+        domain = self.extract_domain(url)
+
+        hash_url = f"https://{domain}/get_srv_details.php?id={torrent_id}&action=2"
+
+        page_soup = self.get_torrent_page(hash_url, drop_cache=True)
+
+        pattern = re.compile(r"Инфо хеш: (.*)")
+
+        if element := page_soup.find('li', text=pattern):
+            match = pattern.match(element.text)
+
+            return torf.Magnet(match.group(1).lower())

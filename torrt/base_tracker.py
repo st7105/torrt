@@ -7,6 +7,7 @@ from locale import getlocale, setlocale, LC_ALL
 from typing import List, Optional, Union
 from urllib.parse import urlparse, urljoin, parse_qs
 
+import torf
 from furl import furl
 
 from .exceptions import TorrtTrackerException
@@ -298,6 +299,9 @@ class BaseTracker(WithSettings):
 
         return torrent_page
 
+    def get_torrent_magnet(self, url: str) -> Optional[torf.Magnet]:
+        raise NotImplementedError
+
 
 class GenericTracker(BaseTracker):
     """Generic torrent tracker handler class implementing most common tracker handling methods."""
@@ -317,6 +321,12 @@ class GenericTracker(BaseTracker):
         """
         return url.split('=')[1]
 
+    def iter_mirrors(self, url: str):
+        mirrors = self.get_mirrors(url)
+
+        for mirror_domain in mirrors:
+            yield self.replace_domain(url, mirror_domain)
+
     def get_torrent(self, url: str) -> Optional[TorrentData]:
         """This is the main method which returns torrent file contents
         of file located at URL.
@@ -324,17 +334,13 @@ class GenericTracker(BaseTracker):
         :param url: URL to find and get torrent from
 
         """
-        mirrors = self.get_mirrors(url)
-
-        for mirror_domain in mirrors:
-            mirror_url = self.replace_domain(url, mirror_domain)
+        for mirror_url in self.iter_mirrors(url):
 
             try:
                 download_link = self.get_download_link(mirror_url)
 
                 if not download_link:
-                    __log__.error(f'Cannot find torrent file download link at {mirror_url}')
-                    continue
+                    raise TorrtTrackerException(f'Cannot find torrent file download link at {mirror_url}')
 
                 page_data = self.extract_page_data()
 
@@ -343,13 +349,12 @@ class GenericTracker(BaseTracker):
                 torrent_contents = self.download_torrent(download_link, referer=mirror_url)
 
                 if torrent_contents is None:
-                    __log__.debug(f'Torrent download from `{download_link}` has failed')
-                    continue
+                    raise TorrtTrackerException(f'Torrent download from `{download_link}` has failed')
 
                 parsed = parse_torrent(torrent_contents)
 
                 if not parsed:
-                    continue
+                    raise TorrtTrackerException(f'Torrent download from `{download_link}` parsed has failed')
 
                 return TorrentData(
                     url=url,
@@ -362,6 +367,24 @@ class GenericTracker(BaseTracker):
                 __log__.warning(f'Cannot find torrent file download link at mirror {mirror_url}: {e}')
 
         __log__.error(f'Cannot find torrent file download link at {url}')
+
+    def get_magnet(self, url: str) -> Optional[torf.Magnet]:
+
+        for mirror_url in self.iter_mirrors(url):
+
+            try:
+                torrent_hash = self.get_torrent_magnet(mirror_url)
+
+                if not torrent_hash:
+                    raise TorrtTrackerException('Response torrent hash is empty')
+
+                __log__.debug(f'Torrent hash found {torrent_hash}: {mirror_url}')
+                return torrent_hash
+
+            except (BaseException, ) as e:
+                __log__.warning(f'Cannot find torrent hash at mirror {mirror_url}: {e}')
+
+        __log__.error(f'Cannot find torrent hash at {url}')
 
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.
@@ -394,6 +417,17 @@ class GenericPublicTracker(GenericTracker):
         # That was a check that user himself visited torrent's page ;)
         response = self.get_response(url, referer=referer)
         return getattr(response, 'content', None)
+
+    def get_torrent_magnet(self, url: str) -> Optional[torf.Magnet]:
+
+        page_soup = self.get_torrent_page(url, drop_cache=True)
+
+        pattern = re.compile(r'magnet:\?xt=urn:btih:(.*)')
+
+        if element := page_soup.find(href=pattern):
+            match = pattern.match(element.attrs.get('href'))
+
+            return torf.Magnet.from_string(match.group(0))
 
 
 class GenericPrivateTracker(GenericPublicTracker):

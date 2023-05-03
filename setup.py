@@ -44,7 +44,8 @@ setup(
         'beautifulsoup4',
         'torrentool',
         'lxml',
-        'furl'
+        'furl',
+        'torf'
     ],
     setup_requires=[] + (['pytest-runner'] if 'test' in sys.argv else []) + [],
 
@@ -65,6 +66,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'License :: OSI Approved :: BSD License'
     ],
 )
