@@ -12,7 +12,7 @@ class RuTrackerTracker(GenericPrivateTracker):
     alias: str = 'rutracker.org'
     login_url: str = 'https://%(domain)s/forum/login.php'
     auth_cookie_name: str = 'bb_session'
-    mirrors: List[str] = ['rutracker.org', 'rutracker.net', 'maintracker.org']
+    mirrors: List[str] = ['rutracker.net', 'maintracker.org']
     encoding: str = 'cp1251'
 
     test_urls: List[str] = [
