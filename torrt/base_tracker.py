@@ -386,6 +386,22 @@ class GenericTracker(BaseTracker):
 
         __log__.error(f'Cannot find torrent hash at {url}')
 
+    def get_download_url(self, url: str) -> Optional[str]:
+        for mirror_url in self.iter_mirrors(url):
+            try:
+                torrent_url = self.get_download_link(mirror_url)
+
+                if not torrent_url:
+                    raise TorrtTrackerException('Response torrent download url is empty')
+
+                __log__.debug(f'Torrent download url found {torrent_url}: {mirror_url}')
+                return torrent_url
+
+            except (BaseException,) as e:
+                __log__.warning(f'Cannot find torrent download url at mirror {mirror_url}: {e}')
+
+        __log__.error(f'Cannot find torrent download url at {url}')
+
     def get_download_link(self, url: str) -> str:
         """Tries to find .torrent file download link on page and return it.
 
