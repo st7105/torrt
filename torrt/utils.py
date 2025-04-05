@@ -56,7 +56,8 @@ class HttpClient:
     ):
         session = Session()
 
-        session.mount('http', HTTPAdapter(max_retries=self.max_retries))
+        session.mount('http://', HTTPAdapter(max_retries=self.max_retries))
+        session.mount('https://', HTTPAdapter(max_retries=self.max_retries))
 
         session.headers.update({
             'User-agent': self.user_agent,
