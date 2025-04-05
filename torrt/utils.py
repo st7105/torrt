@@ -4,6 +4,9 @@ import logging
 import os
 import re
 import threading
+
+from requests.adapters import HTTPAdapter
+
 try:
     from collections.abc import Mapping
 
@@ -38,7 +41,8 @@ RE_LINK = re.compile(r'(?P<url>https?://[^\s]+)')
 class HttpClient:
     """Common client to perform HTTP requests."""
 
-    timeout: int = 10
+    timeout: int = 60
+    max_retries: int = 5
 
     user_agent: str = (
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36')
@@ -51,6 +55,8 @@ class HttpClient:
             tunnel: bool = True,
     ):
         session = Session()
+
+        session.mount('http', HTTPAdapter(max_retries=self.max_retries))
 
         session.headers.update({
             'User-agent': self.user_agent,
