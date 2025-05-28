@@ -526,8 +526,7 @@ class WithSettings:
 class TorrtConfig:
     """Gives methods to work with torrt configuration file."""
 
-    USER_DATA_PATH = Path('~').expanduser() / '.torrt'
-    USER_SETTINGS_FILE = USER_DATA_PATH / 'config.json'
+    USER_SETTINGS_FILE = Path(os.environ.get('TORRT_CONFIG', Path('~').expanduser() / '.torrt' / 'config.json'))
 
     _basic_settings = {
         'trackers': {}
@@ -553,8 +552,8 @@ class TorrtConfig:
     def bootstrap(cls):
         """Initializes configuration file if needed."""
 
-        if not cls.USER_DATA_PATH.exists():
-            os.makedirs(str(cls.USER_DATA_PATH))
+        if not cls.USER_SETTINGS_FILE.parent.exists():
+            os.makedirs(str(cls.USER_SETTINGS_FILE.parent))
 
         if not cls.USER_SETTINGS_FILE.exists():
             cls.save(cls._basic_settings)
