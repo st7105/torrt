@@ -526,7 +526,7 @@ class WithSettings:
 class TorrtConfig:
     """Gives methods to work with torrt configuration file."""
 
-    USER_SETTINGS_FILE = Path(os.environ.get('TORRT_CONFIG', Path('~').expanduser() / '.torrt' / 'config.json'))
+    USER_SETTINGS_FILE =  Path(os.environ.get('TORRT_CONFIG', Path.cwd() / 'torrt.json'))
 
     _basic_settings = {
         'trackers': {}
