@@ -42,7 +42,6 @@ setup(
     install_requires=[
         'requests',
         'beautifulsoup4',
-        'torrentool',
         'lxml',
         'furl',
         'torf'

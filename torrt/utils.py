@@ -4,8 +4,10 @@ import logging
 import os
 import re
 import threading
+from io import BytesIO
 
 from requests.adapters import HTTPAdapter
+from torf import Torrent
 
 try:
     from collections.abc import Mapping
@@ -19,12 +21,10 @@ from inspect import getfullargspec
 from pathlib import Path
 from pkgutil import iter_modules
 from time import time
-from typing import Any, Optional, Union, Generator, Tuple, Callable
+from typing import Any, Optional, Union, Callable
 
 from bs4 import BeautifulSoup
 from requests import Response, Session, RequestException
-from torrentool.api import Torrent
-from torrentool.exceptions import BencodeDecodingError
 
 if False:  # pragma: nocover
     from .base_tracker import GenericTracker  # noqa
@@ -299,13 +299,7 @@ def parse_torrent(torrent: bytes) -> Optional[Torrent]:
     :param torrent: Torrent file contents.
 
     """
-    try:
-        return Torrent.from_string(torrent)
-
-    except BencodeDecodingError as e:
-        __log__.error(f'Unable to parse torrent: {e}')
-        return None
-
+    return Torrent.read_stream(BytesIO(torrent))
 
 def make_soup(html: str) -> BeautifulSoup:
     """Returns BeautifulSoup object from a html.
@@ -404,7 +398,7 @@ class TorrentData:
         self._hash = hash
 
     def _get_hash(self):
-        return self._hash or getattr(self.parsed, 'info_hash', '') or ''
+        return self._hash or getattr(self.parsed, 'infohash', '') or ''
 
     def _set_hash(self, val: str):
         self._hash = val
